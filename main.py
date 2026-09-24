@@ -1,4 +1,3 @@
-import csv
 import random
 
 music = {
@@ -26,38 +25,41 @@ music = {
     ]
 }
 
+emotion_words = {
+    "happy": [
+        "happy", "joy", "excited", "great", "good",
+        "wonderful", "awesome", "love", "fun"
+    ],
+    "sad": [
+        "sad", "upset", "lonely", "cry", "unhappy",
+        "hurt", "low", "depressed", "down"
+    ],
+    "angry": [
+        "angry", "mad", "frustrated", "annoyed",
+        "irritated", "furious", "hate"
+    ],
+    "relaxed": [
+        "calm", "relaxed", "peaceful", "chill",
+        "comfortable", "quiet"
+    ]
+}
 
-def load_dataset():
-    data = []
 
-    with open("dataset.csv", "r", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-
-        for row in reader:
-            data.append(row)
-
-    return data
-
-
-def detect_emotion(text, dataset):
+def detect_emotion(text):
     text = text.lower()
+    scores = {}
 
-    best_emotion = "neutral"
-    best_score = 0
-
-    for row in dataset:
-        words = row["text"].lower().split()
-        score = 0
+    for emotion, words in emotion_words.items():
+        scores[emotion] = 0
 
         for word in words:
-            word = word.strip(".,!?")
+            if word in text:
+                scores[emotion] += 1
 
-            if len(word) > 2 and word in text:
-                score += 1
+    best_emotion = max(scores, key=scores.get)
 
-        if score > best_score:
-            best_score = score
-            best_emotion = row["emotion"]
+    if scores[best_emotion] == 0:
+        return "neutral"
 
     return best_emotion
 
@@ -66,9 +68,7 @@ def recommend_music(emotion):
     print("\nDetected Emotion:", emotion.upper())
     print("\nRecommended Songs:")
 
-    songs = music[emotion]
-
-    for song in random.sample(songs, len(songs)):
+    for song in music[emotion]:
         print("-", song)
 
 
@@ -76,10 +76,12 @@ print("====================================")
 print("Depression Sensitive Music Recommendation")
 print("====================================")
 
-dataset = load_dataset()
+while True:
+    user_input = input("\nHow are you feeling? ")
 
-user_input = input("\nHow are you feeling? ")
+    if user_input.lower() == "exit":
+        print("Thank you!")
+        break
 
-emotion = detect_emotion(user_input, dataset)
-
-recommend_music(emotion)
+    emotion = detect_emotion(user_input)
+    recommend_music(emotion)
